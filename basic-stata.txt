@@ -1,0 +1,86 @@
+
+clear
+cls
+
+global root "URSOS-STATA\MANUSTATA\clase 2"
+
+	gl data $root\data
+
+	gl dofile $root\do
+
+	gl output $root\output
+	
+use "$data\enaho01a-2018-500.dta", clear
+
+describe
+browse
+
+codebook dominio
+
+tabulate dominio
+
+tabulate p507
+
+gen ing_es1=i524a1+d529t+i530a+d536+i538a1+d540t+i541a+d543+d544t 
+
+// Asignando ceros a missing values
+foreach x of varlist i524a1 d529t i530a d536 i538a1 d540t i541a d543 d544t{
+	replace `x'=0 if `x'==. 
+}
+
+//eliminar la variable ingresos del escenario 1 con missing values
+drop ing_es1
+
+// generamos los nuevos ingresos correctamente
+
+gen ing_es1=i524a1+d529t+i530a+d536+i538a1+d540t+i541a+d543+d544t 
+
+codebook ing_es1
+
+//eliminando los ceros de la variable ingresos del escenario 1
+drop if ing_es1==0
+
+codebook ing_es1
+
+tabulate p506
+tabulate p506, nolabel
+
+// generando actividades económicas
+
+gen act_eco=0 if p506>=111 & p506<=500
+replace act_eco=1 if p506>=1010 & p506<=1929
+replace act_eco=2 if p506>=1511 & p506<=3720
+replace act_eco=3 if p506>=4010 & p506<=4100
+replace act_eco=4 if p506>=4510 & p506<=4550
+replace act_eco=5 if p506>=5010 & p506<=5270
+replace act_eco=6 if p506>=5510 & p506<=6309
+
+replace act_eco=7 if (p506>=6411 & p506<=9249) | (p506>=9900 & p506<=9999)
+
+replace act_eco=8 if p506>=9301 & p506<=9500
+
+label define act_eco 0 "Agricultura y pesca" 1 "Minería" 2 "Manufactura" 3 "Agua, electricidad y gas" 4 "Construcción" 5 "Retail, restaurantes y hoteles" 6 "Almancenamiento y transportes" 7 "Servicios profesionales" 8 "Servicios domésticos"
+
+label values act_eco act_eco
+
+tab act_eco
+tab act_eco, nolabel
+
+table act_eco dominio, contents(mean ing_es1)
+
+tabstat ing_es1, s(mean sd n)
+browse p506 act_eco, nolabel
+
+// generando ingreso escenario dos
+
+gen ing_es2=(9/12)*ing_es1 if p507==2 & (act_eco==4 | act_eco==5 | act_eco==6)
+
+
+
+
+
+
+
+
+
+
